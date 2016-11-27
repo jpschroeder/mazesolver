@@ -11,320 +11,152 @@ namespace ConsoleApplication
         public static void Main(string[] args)
         {
             int dimen = 20;
-            var board = MazeRunner.GenerateBoard(dimen, dimen);
-            var str = MazeRunner.RenderBoard(board);
-            Console.WriteLine(str);
+            Console.Clear();
+            Console.CursorVisible = false;
+            var maze = MazeGenerator.GenerateMaze(dimen, dimen);
+            MazeGenerator.RenderMaze(maze);
         }
     }
 
-    public class MazeRunner
+    public enum Direction
     {
-        public static Board GenerateBoard(int xsize, int ysize)
+        North = 1,
+        South = 2,
+        East = 4,
+        West = 8
+    }
+
+    public class MazeGenerator
+    {
+        private static Random rand = new Random();
+        public static int[,] GenerateMaze(int height, int width)
         {
-            var rand = new Random();
-            var board = new Board();
-            board.rooms = GenerateRooms(xsize, ysize);
+            var grid = new int[height,width];
+            CarvePassages(grid, rand.Next(width), rand.Next(height));
+            return grid;
+        }
 
-            int randy = rand.Next(ysize);
-            board.start = new Address(0, randy);
-            randy = rand.Next(ysize);
-            board.finish = new Address(ysize-1, randy);
+        public static void CarvePassages(int[,] grid, int currentX, int currentY)
+        {
+            RenderMaze(grid, currentX, currentY);
+            //System.Threading.Thread.Sleep(50);
+            var dir = (Direction[])Enum.GetValues(typeof(Direction));
+            var directions = dir.OrderBy(x => rand.Next());
 
-            var visited = new List<Address>();
-            var seen = new Stack<Address>();
-            seen.Push(board.start);
-            while(seen.Any())
+            foreach(var direction in directions)
             {
-                var currentAddr = seen.Pop();
-                var currentRoom = board.GetRoom(currentAddr);
-                var str = RenderBoard(board, currentAddr);
-                Console.Clear();
-                Console.WriteLine(str);
-                System.Threading.Thread.Sleep(200);
-                if (visited.Contains(currentAddr))
+                int nextX = currentX + OffsetX(direction);
+                int nextY = currentY + OffsetY(direction);
+
+                if (!ValidX(nextX, grid) || !ValidY(nextY, grid))
                 {
                     continue;
                 }
 
-                if (visited.Count() > 0)
+                if (grid[nextY, nextX] != 0)
                 {
-                    var previousAddr = visited.Last();
-                    var previousRoom = board.GetRoom(previousAddr);
-                    currentRoom.adjacent.Clear();
-                    currentRoom.adjacent.Add(previousAddr);
-                    previousRoom.adjacent.Add(currentAddr);
+                    continue;
                 }
 
-                visited.Add(currentAddr);
-
-                var toadd = currentRoom.adjacent.Where(x => !visited.Contains(x) && !seen.Contains(x)).ToList();
-                if (toadd.Count() > 0)
-                {
-                    toadd.Shuffle();
-                    toadd.ForEach(x => seen.Push(x));
-                }
-                else
-                {
-                    seen.Shuffle();
-                }
+                grid[currentY, currentX] |= (int)direction;
+                grid[nextY, nextX] |= (int)Opposite(direction);
+                CarvePassages(grid, nextX, nextY);
             }
-
-            return board;
         }
 
-        public static string RenderBoard(Board board, Address current = null)
+        public static void RenderMaze(int[,] grid, int currentX = -1, int currentY = -1)
         {
-            var sb = new StringBuilder();
-            for(var y = 0; y <= board.rooms.GetUpperBound(1); y++)
+            int height = grid.GetUpperBound(0) + 1;
+            int width = grid.GetUpperBound(1) + 1;
+            Console.SetCursorPosition(0,0);
+            Console.Write(" ");
+            for(int x = 0; x < width * 2 - 1; x++)
             {
-                if (y == 0)
+                Console.Write("_");
+            }
+            Console.Write("\n");
+
+            for(int y = 0; y < height; y++)
+            {
+                Console.Write("|");
+                for(int x = 0; x < width; x++)
                 {
-                    for(var x = 0; x <= board.rooms.GetUpperBound(0); x++)
+                    var mid = DirectionExists(grid[y,x], Direction.South)? "_" : " ";
+                    if (currentX != -1 && currentY != -1 && x == currentX && y == currentY)
                     {
-                        if (x == 0)
-                        {
-                            sb.Append("+");
-                        }
-                        sb.Append(board.rooms[x, y].topwall()? "-" : " ");
-                        sb.Append("+");
-                    }
-                    sb.Append("\n");
-                }
-                for(var x = 0; x <= board.rooms.GetUpperBound(0); x++)
-                {
-                    if (x == 0)
-                    {
-                        sb.Append(board.rooms[x,y].leftwall()? "|" : " ");
-                    }
-                    var addr = new Address(x, y);
-                    //Console.WriteLine($"current: {current}, addr: {addr}");
-                    if (addr == board.start)
-                    {
-                        sb.Append("S");
-                    }
-                    else if (addr == board.finish)
-                    {
-                        sb.Append("E");
-                    }
-                    else if (current != null && addr == current)
-                    {
-                        sb.Append("X");
+                        Console.BackgroundColor = ConsoleColor.Green;
+                        Console.Write(mid);
+                        Console.ResetColor();
                     }
                     else
                     {
-                        sb.Append(" ");
+                        Console.Write(mid);
                     }
-                    sb.Append(board.rooms[x,y].rightwall()? "|" : " ");
-                }
-                sb.Append("\n");
-                for(var x = 0; x <= board.rooms.GetUpperBound(0); x++)
-                {
-                    if (x == 0)
-                    {
-                        sb.Append("+");
-                    }
-                    sb.Append(board.rooms[x, y].bottomwall()? "-" : " ");
-                    sb.Append("+");
-                }
-                sb.Append("\n");
-            }
-            return sb.ToString();
-        }
 
-        private static Room[,] GenerateRooms(int xsize, int ysize)
-        {
-            var rooms = new Room[xsize, ysize];
-            for(int y = 0; y < ysize; y++)
-            {
-                for(int x = 0; x < xsize; x++)
-                {
-                    var room = new Room(new Address(x, y));
-                    if (x <= 0)
+                    if (DirectionExists(grid[y,x], Direction.East))
                     {
-                        room.adjacent.Add(room.address.right());
-                    }
-                    else if (x >= xsize - 1)
-                    {
-                        room.adjacent.Add(room.address.left());
+                        Console.Write("|");
                     }
                     else
                     {
-                        room.adjacent.Add(room.address.left());
-                        room.adjacent.Add(room.address.right());
+                        Console.Write(DirectionExists(grid[y,x], Direction.South)? "_" : " ");
                     }
-
-                    if (y <= 0)
-                    {
-                        room.adjacent.Add(room.address.bottom());
-                    }
-                    else if (y >= ysize - 1)
-                    {
-                        room.adjacent.Add(room.address.top());
-                    }
-                    else
-                    {
-                        room.adjacent.Add(room.address.top());
-                        room.adjacent.Add(room.address.bottom());
-                    }
-
-                    rooms[x,y] = room;
                 }
+                Console.Write("\n");
             }
-            return rooms;
-        }
-    }
-
-    public class Address
-    {
-        public int xvalue { get; set; }
-        public int yvalue { get; set; }
-
-        public Address(int _xvalue, int _yvalue)
-        {
-            this.xvalue = _xvalue;
-            this.yvalue = _yvalue;
         }
 
-        public override bool Equals(Object obj) 
+        public static bool DirectionExists(int gridelem, Direction direction)
         {
-            if (obj == null || GetType() != obj.GetType()) 
-                return false;
-            Address p = (Address)obj;
-            return this.Equals(p);
+            return !((gridelem & (int)direction) != 0);
         }
-        public bool Equals(Address p)
+
+        public static bool ValidX(int val, int[,] grid)
         {
-            return (xvalue == p.xvalue) && (yvalue == p.yvalue);
+            return val >= 0 && val <= grid.GetUpperBound(1);
         }
-        public static bool operator ==(Address a, Address b)
+
+        public static bool ValidY(int val, int[,] grid)
         {
-            if (((object)a == null) || ((object)b == null))
+            return val >= 0 && val <= grid.GetUpperBound(0);
+        }
+
+        public static Direction Opposite(Direction direction)
+        {
+            switch(direction)
             {
-                return false;
+                case Direction.North: return Direction.South;
+                case Direction.South: return Direction.North;
+                case Direction.East: return Direction.West;
+                case Direction.West: return Direction.East;
+                default: throw new Exception($"Invalid direction: {direction}");
             }
-            return a.Equals(b);
-        }
-        public static bool operator !=(Address a, Address b)
-        {
-            return !(a == b);
         }
 
-
-        public override int GetHashCode() 
+        public static int OffsetX(Direction direction)
         {
-            return xvalue ^ yvalue;
-        }
-
-        public override string ToString()
-        {
-            return $"x: {this.xvalue}, y: {this.yvalue}";
-        }
-
-        public Address left()
-        {
-            return new Address(this.xvalue - 1, this.yvalue);
-        }
-        public Address top()
-        {
-            return new Address(this.xvalue, this.yvalue - 1);
-        }
-        public Address right()
-        {
-            return new Address(this.xvalue + 1, this.yvalue);
-        }
-        public Address bottom()
-        {
-            return new Address(this.xvalue, this.yvalue + 1);
-        }
-    }
-
-    public class Room
-    {
-        public Address address { get; }
-        public List<Address> adjacent { get; }
-        public Room(Address _address)
-        {
-            this.address = _address;
-            this.adjacent = new List<Address>();
-        }
-
-        public void AddAdjacent(Address address)
-        {
-            this.adjacent.Add(address);
-        }
-
-        public bool leftwall()
-        { 
-            return !this.adjacent.Contains(this.address.left());
-        }
-        public bool rightwall()
-        {
-            return !this.adjacent.Contains(this.address.right());
-        }
-        public bool topwall()
-        {
-            return !this.adjacent.Contains(this.address.top());
-        }
-        public bool bottomwall()
-        {
-            return !this.adjacent.Contains(this.address.bottom());
-        }
-    }
-
-    public class Board
-    {
-        public Room[,] rooms { get; set; }
-
-        public Address start { get; set; }
-
-        public Address finish { get; set; }
-
-        public Room GetRoom(Address address)
-        {
-            if (address.xvalue < rooms.GetLowerBound(0) ||
-                address.xvalue > rooms.GetUpperBound(0) ||
-                address.yvalue < rooms.GetLowerBound(1) ||
-                address.yvalue > rooms.GetUpperBound(1))
+            switch(direction)
             {
-                Console.WriteLine($"Out of Range: {address}");
-                return null;
+                case Direction.North: return 0;
+                case Direction.South: return 0;
+                case Direction.East: return 1;
+                case Direction.West: return -1;
+                default: throw new Exception($"Invalid direction: {direction}");
             }
-            var ret = rooms[address.xvalue, address.yvalue];
-            return ret;
+        }
+        public static int OffsetY(Direction direction)
+        {
+            switch(direction)
+            {
+                case Direction.North: return -1;
+                case Direction.South: return 1;
+                case Direction.East: return 0;
+                case Direction.West: return 0;
+                default: throw new Exception($"Invalid direction: {direction}");
+            }
         }
     }
 
-    public static class RandomHelpers
-    {
-        private static Random rng = new Random();  
-        public static void Shuffle<T>(this IList<T> list)  
-        {  
-            int n = list.Count;  
-            while (n > 1) {  
-                n--;  
-                int k = rng.Next(n + 1);  
-                T value = list[k];  
-                list[k] = list[n];  
-                list[n] = value;  
-            }  
-        }
-        /*
-        public static Stack<T> Shuffle<T>(this Stack<T> stack)
-        {
-            return new Stack<T>(stack.OrderBy(x => rng.Next()));
-        }
-        */
-        public static void Shuffle<T>(this Stack<T> stack)
-        {
-            var values = stack.ToArray();
-            stack.Clear();
-            foreach (var value in values.OrderBy(x => rng.Next()))
-                stack.Push(value);
-        }
-        private static bool NextBool(this Random rand)
-        {
-            return rand.NextDouble() >= 0.5;
-        }
-    }
+
     
 }
