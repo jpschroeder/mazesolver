@@ -13,7 +13,7 @@ namespace ConsoleApplication
             int dimen = 20;
             Console.Clear();
             Console.CursorVisible = false;
-            while(true)
+            //while(true)
             {
                 var maze = Maze.GenerateMaze(dimen, dimen);
                 var path = Maze.SolveMaze(maze);
