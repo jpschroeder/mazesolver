@@ -1,9 +1,4 @@
-
 using System;
-using System.Collections.Immutable;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace MazeProgram
 {
@@ -17,6 +12,52 @@ namespace MazeProgram
 
     public class Maze
     {
+        private int[,] grid;
+
+        public int height { get {
+            return this.grid.GetUpperBound(0) + 1;
+        } }
+        public int width { get {
+            return this.grid.GetUpperBound(1) + 1;
+        } }
+
+        public Maze(int height, int width)
+        {
+            this.grid = new int[height,width];
+        }
+
+        public bool NoDoors(int y, int x)
+        {
+            return this.grid[y,x] == 0;
+        }
+        public bool HasDoors(int y, int x)
+        {
+            return this.grid[y,x] != 0;
+        }
+
+        public void CreateDoor(int y, int x, Direction direction)
+        {
+            this.grid[y, x] |= (int)direction;
+        }
+
+        public bool ValidX(int val)
+        {
+            return val >= 0 && val <= this.grid.GetUpperBound(1);
+        }
+        public bool ValidY(int val)
+        {
+            return val >= 0 && val <= this.grid.GetUpperBound(0);
+        }
+
+        public bool WallExists(int y, int x, Direction direction)
+        {
+            return WallExists(this.grid[y,x], direction);
+        }
+        public bool DoorExists(int y, int x, Direction direction)
+        {
+            return DoorExists(this.grid[y,x], direction);
+        }
+
         public static bool WallExists(int gridelem, Direction direction)
         {
             return !DoorExists(gridelem, direction);
@@ -24,16 +65,6 @@ namespace MazeProgram
         public static bool DoorExists(int gridelem, Direction direction)
         {
             return ((gridelem & (int)direction) != 0);
-        }
-
-        public static bool ValidX(int val, int[,] grid)
-        {
-            return val >= 0 && val <= grid.GetUpperBound(1);
-        }
-
-        public static bool ValidY(int val, int[,] grid)
-        {
-            return val >= 0 && val <= grid.GetUpperBound(0);
         }
 
         public static Direction Opposite(Direction direction)

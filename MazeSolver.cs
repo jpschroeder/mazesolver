@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Immutable;
 using System.Collections.Generic;
@@ -11,14 +10,14 @@ namespace MazeProgram
 
         private static Random rand = new Random();
 
-        public static ImmutableList<Tuple<int,int>> SolveMaze(int[,] grid)
+        public static ImmutableList<Tuple<int,int>> SolveMaze(Maze grid)
         {
             int startx = 0;
-            int starty = rand.Next(grid.GetUpperBound(0));
+            int starty = rand.Next(grid.height -1);
             var start = new Tuple<int,int>(startx, starty);
 
-            int finishx = grid.GetUpperBound(1);
-            int finishy = rand.Next(grid.GetUpperBound(0));
+            int finishx = grid.width -1;
+            int finishy = rand.Next(grid.height -1);
             var finish = new Tuple<int,int>(finishx, finishy);
 
             var path = ImmutableList.Create<Tuple<int,int>>(start);
@@ -28,7 +27,7 @@ namespace MazeProgram
         }
 
         public static ImmutableList<Tuple<int,int>> SolveMaze(
-            int[,] grid,
+            Maze grid,
             ImmutableList<Tuple<int,int>> currentPath,
             HashSet<Tuple<int,int>> visited,
             int finishX, int finishY)
@@ -37,7 +36,7 @@ namespace MazeProgram
             int currentX = currentPath.Last().Item1;
             int currentY = currentPath.Last().Item2;
             var dir = (Direction[])Enum.GetValues(typeof(Direction));
-            var directions = dir.Where(d => Maze.DoorExists(grid[currentY,currentX], d)).OrderBy(x => rand.Next());
+            var directions = dir.Where(d => grid.DoorExists(currentY, currentX, d)).OrderBy(x => rand.Next());
 
             foreach(var direction in directions)
             {
@@ -45,7 +44,7 @@ namespace MazeProgram
                 int nextY = currentY + Maze.OffsetY(direction);
                 var next = new Tuple<int,int>(nextX, nextY);
 
-                if (!Maze.ValidX(nextX, grid) || !Maze.ValidY(nextY, grid))
+                if (!grid.ValidX(nextX) || !grid.ValidY(nextY))
                 {
                     continue;
                 }

@@ -1,39 +1,35 @@
 using System;
 using System.Collections.Immutable;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace MazeProgram
 {
     public class MazeRenderer
     {
-        public static void RenderMaze(int[,] grid)
+        public static void RenderMaze(Maze grid)
         {
             RenderMaze(grid, null);
         }
-        public static void RenderMaze(int[,] grid, int x, int y)
+        public static void RenderMaze(Maze grid, int x, int y)
         {
             RenderMaze(grid, ImmutableList.Create<Tuple<int,int>>(new Tuple<int,int>(x,y)));
         }
-        public static void RenderMaze(int[,] grid, ImmutableList<Tuple<int,int>> highlightList)
+        public static void RenderMaze(Maze grid, ImmutableList<Tuple<int,int>> highlightList)
         {
             var highlight = highlightList == null? null : highlightList.ToImmutableHashSet();
-            int height = grid.GetUpperBound(0) + 1;
-            int width = grid.GetUpperBound(1) + 1;
             Console.SetCursorPosition(0,0);
             Console.Write(" ");
-            for(int x = 0; x < width * 2 - 1; x++)
+            for(int x = 0; x < grid.width * 2 - 1; x++)
             {
                 Console.Write("_");
             }
             Console.Write("\n");
 
-            for(int y = 0; y < height; y++)
+            for(int y = 0; y < grid.height; y++)
             {
                 Console.Write("|");
-                for(int x = 0; x < width; x++)
+                for(int x = 0; x < grid.width; x++)
                 {
-                    var mid = Maze.WallExists(grid[y,x], Direction.South)? "_" : " ";
+                    var mid = grid.WallExists(y, x, Direction.South)? "_" : " ";
                     bool hl = (highlight != null && highlight.Contains(new Tuple<int,int>(x,y)));
                     if (hl)
                     {
@@ -46,13 +42,13 @@ namespace MazeProgram
                         Console.Write(mid);
                     }
 
-                    if (Maze.WallExists(grid[y,x], Direction.East))
+                    if (grid.WallExists(y, x, Direction.East))
                     {
                         Console.Write("|");
                     }
                     else
                     {
-                        var s = Maze.WallExists(grid[y,x], Direction.South)? "_" : " ";
+                        var s = grid.WallExists(y, x, Direction.South)? "_" : " ";
                         if (hl)
                         {
                             Console.BackgroundColor = ConsoleColor.Blue;

@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Immutable;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace MazeProgram
@@ -8,13 +6,13 @@ namespace MazeProgram
     public class MazeGenerator
     {
         private static Random rand = new Random();
-        public static int[,] GenerateMaze(int height, int width)
+        public static Maze GenerateMaze(int height, int width)
         {
-            var grid = new int[height,width];
+            var grid = new Maze(height, width);
             CarvePassages(grid, rand.Next(width), rand.Next(height));
             return grid;
         }
-        public static void CarvePassages(int[,] grid, int currentX, int currentY)
+        public static void CarvePassages(Maze grid, int currentX, int currentY)
         {
             MazeRenderer.RenderMaze(grid, currentX, currentY);
             var dir = (Direction[])Enum.GetValues(typeof(Direction));
@@ -25,18 +23,18 @@ namespace MazeProgram
                 int nextX = currentX + Maze.OffsetX(direction);
                 int nextY = currentY + Maze.OffsetY(direction);
 
-                if (!Maze.ValidX(nextX, grid) || !Maze.ValidY(nextY, grid))
+                if (!grid.ValidX(nextX) || !grid.ValidY(nextY))
                 {
                     continue;
                 }
 
-                if (grid[nextY, nextX] != 0)
+                if (grid.HasDoors(nextY, nextX))
                 {
                     continue;
                 }
 
-                grid[currentY, currentX] |= (int)direction;
-                grid[nextY, nextX] |= (int)Maze.Opposite(direction);
+                grid.CreateDoor(currentY, currentX, direction);
+                grid.CreateDoor(nextY, nextX, Maze.Opposite(direction));
                 CarvePassages(grid, nextX, nextY);
             }
         }
