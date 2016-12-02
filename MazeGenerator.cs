@@ -8,11 +8,16 @@ namespace MazeProgram
         private static Random rand = new Random();
         public static Maze GenerateMaze(int height, int width)
         {
-            var grid = new Maze(height, width);
+            int startx = 0;
+            int starty = rand.Next(height -1);
+            int finishx = width -1;
+            int finishy = rand.Next(height -1);
+
+            var grid = new Maze(height, width, starty, startx, finishy, finishx);
             CarvePassages(grid, rand.Next(width), rand.Next(height));
             return grid;
         }
-        public static void CarvePassages(Maze grid, int currentX, int currentY)
+        private static void CarvePassages(Maze grid, int currentX, int currentY)
         {
             MazeRenderer.RenderMaze(grid, currentX, currentY);
             var dir = (Direction[])Enum.GetValues(typeof(Direction));

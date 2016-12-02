@@ -14,16 +14,26 @@ namespace MazeProgram
     {
         private int[,] grid;
 
-        public int height { get {
-            return this.grid.GetUpperBound(0) + 1;
-        } }
-        public int width { get {
-            return this.grid.GetUpperBound(1) + 1;
-        } }
+        public int height { get; }
+        public int width { get; }
+        public int starty { get; }
+        public int startx { get; }
+        public Tuple<int,int> start { get;}
+        public int finishy { get; }
+        public int finishx { get; }
+        public Tuple<int,int> finish { get;}
 
-        public Maze(int height, int width)
+        public Maze(int height, int width, int starty, int startx, int finishy, int finishx)
         {
             this.grid = new int[height,width];
+            this.height = height;
+            this.width = width;
+            this.starty = starty;
+            this.startx = startx;
+            this.start = new Tuple<int,int>(startx, starty);
+            this.finishy = finishy;
+            this.finishx = finishx;
+            this.finish = new Tuple<int,int>(finishx, finishy);
         }
 
         public bool NoDoors(int y, int x)

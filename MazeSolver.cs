@@ -7,32 +7,22 @@ namespace MazeProgram
 {
     public class MazeSolver
     {
-
         private static Random rand = new Random();
 
         public static ImmutableList<Tuple<int,int>> SolveMaze(Maze grid)
         {
-            int startx = 0;
-            int starty = rand.Next(grid.height -1);
-            var start = new Tuple<int,int>(startx, starty);
-
-            int finishx = grid.width -1;
-            int finishy = rand.Next(grid.height -1);
-            var finish = new Tuple<int,int>(finishx, finishy);
-
-            var path = ImmutableList.Create<Tuple<int,int>>(start);
+            var path = ImmutableList.Create<Tuple<int,int>>(grid.start);
             var visited = new HashSet<Tuple<int,int>>();
-            visited.Add(start);
-            return SolveMaze(grid, path, visited, finishx, finishy);
+            visited.Add(grid.start);
+            return SolveMaze(grid, path, visited);
         }
 
-        public static ImmutableList<Tuple<int,int>> SolveMaze(
+        private static ImmutableList<Tuple<int,int>> SolveMaze(
             Maze grid,
             ImmutableList<Tuple<int,int>> currentPath,
-            HashSet<Tuple<int,int>> visited,
-            int finishX, int finishY)
+            HashSet<Tuple<int,int>> visited)
         {
-            MazeRenderer.RenderMaze(grid, currentPath.Add(new Tuple<int,int>(finishX, finishY)));
+            MazeRenderer.RenderMaze(grid, currentPath.Add(grid.finish));
             int currentX = currentPath.Last().Item1;
             int currentY = currentPath.Last().Item2;
             var dir = (Direction[])Enum.GetValues(typeof(Direction));
@@ -49,7 +39,7 @@ namespace MazeProgram
                     continue;
                 }
 
-                if (nextX == finishX && nextY == finishY)
+                if (nextX == grid.finishx && nextY == grid.finishy)
                 {
                     return currentPath.Add(next);
                 }
@@ -60,7 +50,7 @@ namespace MazeProgram
                 }
                 visited.Add(next);
 
-                var ret = SolveMaze(grid, currentPath.Add(next), visited, finishX, finishY);
+                var ret = SolveMaze(grid, currentPath.Add(next), visited);
                 if (ret != null)
                 {
                     return ret;
