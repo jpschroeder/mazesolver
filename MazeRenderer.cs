@@ -33,7 +33,7 @@ namespace MazeProgram
                     bool hl = (highlight != null && highlight.Contains(new Tuple<int,int>(x,y)));
                     if (hl)
                     {
-                        Console.BackgroundColor = ConsoleColor.Blue;
+                        Console.BackgroundColor = ConsoleColor.Green;
                         Console.Write(mid);
                         Console.ResetColor();
                     }
@@ -51,7 +51,7 @@ namespace MazeProgram
                         var s = grid.WallExists(y, x, Direction.South)? "_" : " ";
                         if (hl)
                         {
-                            Console.BackgroundColor = ConsoleColor.Blue;
+                            Console.BackgroundColor = ConsoleColor.Green;
                             Console.Write(s);
                             Console.ResetColor();
                         }
