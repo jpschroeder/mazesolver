@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace MazeProgram
 {
+    // Find a path through the maze
     public class MazeSolver
     {
         private static Random rand = new Random();
@@ -22,7 +23,7 @@ namespace MazeProgram
             ImmutableList<Tuple<int,int>> currentPath,
             HashSet<Tuple<int,int>> visited)
         {
-            MazeRenderer.RenderMaze(grid, currentPath.Add(grid.finish));
+            MazeRenderer.RenderMaze(grid, currentPath);
             int currentX = currentPath.Last().Item1;
             int currentY = currentPath.Last().Item2;
             var dir = (Direction[])Enum.GetValues(typeof(Direction));

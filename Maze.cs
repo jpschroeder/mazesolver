@@ -2,6 +2,7 @@ using System;
 
 namespace MazeProgram
 {
+    // Bitfields representing the directions of walls/doors
     public enum Direction
     {
         North = 1,
@@ -10,18 +11,20 @@ namespace MazeProgram
         West = 8
     }
 
+    // Represents the Maze to be solved
     public class Maze
     {
+        // For each x,y coordinate store a bitfield representing the directions of the doors in the room
         private int[,] grid;
 
         public int height { get; }
         public int width { get; }
         public int starty { get; }
         public int startx { get; }
-        public Tuple<int,int> start { get;}
+        public Tuple<int,int> start => new Tuple<int,int>(startx, starty);
         public int finishy { get; }
         public int finishx { get; }
-        public Tuple<int,int> finish { get;}
+        public Tuple<int,int> finish => new Tuple<int,int>(finishx, finishy);
 
         public Maze(int height, int width, int starty, int startx, int finishy, int finishx)
         {
@@ -30,53 +33,37 @@ namespace MazeProgram
             this.width = width;
             this.starty = starty;
             this.startx = startx;
-            this.start = new Tuple<int,int>(startx, starty);
             this.finishy = finishy;
             this.finishx = finishx;
-            this.finish = new Tuple<int,int>(finishx, finishy);
         }
 
         public bool NoDoors(int y, int x)
-        {
-            return this.grid[y,x] == 0;
-        }
+            => this.grid[y,x] == 0;
+
         public bool HasDoors(int y, int x)
-        {
-            return this.grid[y,x] != 0;
-        }
-
+            => this.grid[y,x] != 0;
+        
         public void CreateDoor(int y, int x, Direction direction)
-        {
-            this.grid[y, x] |= (int)direction;
-        }
-
+            => this.grid[y, x] |= (int)direction;
+        
         public bool ValidX(int val)
-        {
-            return val >= 0 && val <= this.grid.GetUpperBound(1);
-        }
+            => val >= 0 && val <= this.grid.GetUpperBound(1);
+        
         public bool ValidY(int val)
-        {
-            return val >= 0 && val <= this.grid.GetUpperBound(0);
-        }
-
+            => val >= 0 && val <= this.grid.GetUpperBound(0);
+        
         public bool WallExists(int y, int x, Direction direction)
-        {
-            return WallExists(this.grid[y,x], direction);
-        }
+            => WallExists(this.grid[y,x], direction);
+        
         public bool DoorExists(int y, int x, Direction direction)
-        {
-            return DoorExists(this.grid[y,x], direction);
-        }
-
+            => DoorExists(this.grid[y,x], direction);
+        
         public static bool WallExists(int gridelem, Direction direction)
-        {
-            return !DoorExists(gridelem, direction);
-        }
+            => !DoorExists(gridelem, direction);
+        
         public static bool DoorExists(int gridelem, Direction direction)
-        {
-            return ((gridelem & (int)direction) != 0);
-        }
-
+            => ((gridelem & (int)direction) != 0);
+        
         public static Direction Opposite(Direction direction)
         {
             switch(direction)
@@ -100,6 +87,7 @@ namespace MazeProgram
                 default: throw new Exception($"Invalid direction: {direction}");
             }
         }
+        
         public static int OffsetY(Direction direction)
         {
             switch(direction)
