@@ -21,10 +21,10 @@ namespace MazeProgram
         public int width { get; }
         public int starty { get; }
         public int startx { get; }
-        public Tuple<int,int> start => new Tuple<int,int>(startx, starty);
+        public (int x, int y) start => (startx, starty);
         public int finishy { get; }
         public int finishx { get; }
-        public Tuple<int,int> finish => new Tuple<int,int>(finishx, finishy);
+        public (int x, int y) finish => (finishx, finishy);
 
         public Maze(int height, int width, int starty, int startx, int finishy, int finishx)
         {

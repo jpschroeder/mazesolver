@@ -10,18 +10,18 @@ namespace MazeProgram
     {
         private static Random rand = new Random();
 
-        public static ImmutableList<Tuple<int,int>> SolveMaze(Maze grid)
+        public static ImmutableList<(int x, int y)> SolveMaze(Maze grid)
         {
-            var path = ImmutableList.Create<Tuple<int,int>>(grid.start);
-            var visited = new HashSet<Tuple<int,int>>();
+            var path = ImmutableList.Create<(int x, int y)>(grid.start);
+            var visited = new HashSet<(int x, int y)>();
             visited.Add(grid.start);
             return SolveMaze(grid, path, visited);
         }
 
-        private static ImmutableList<Tuple<int,int>> SolveMaze(
+        private static ImmutableList<(int x, int y)> SolveMaze(
             Maze grid,
-            ImmutableList<Tuple<int,int>> currentPath,
-            HashSet<Tuple<int,int>> visited)
+            ImmutableList<(int x, int y)> currentPath,
+            HashSet<(int x, int y)> visited)
         {
             MazeRenderer.RenderMaze(grid, currentPath);
             int currentX = currentPath.Last().Item1;
@@ -33,7 +33,7 @@ namespace MazeProgram
             {
                 int nextX = currentX + Maze.OffsetX(direction);
                 int nextY = currentY + Maze.OffsetY(direction);
-                var next = new Tuple<int,int>(nextX, nextY);
+                var next = (nextX, nextY);
 
                 if (!grid.ValidX(nextX) || !grid.ValidY(nextY))
                 {

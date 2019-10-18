@@ -10,13 +10,13 @@ namespace MazeProgram
             => RenderMaze(grid, null);
 
         public static void RenderMaze(Maze grid, int x, int y)
-            => RenderMaze(grid, ImmutableList.Create<Tuple<int,int>>(new Tuple<int,int>(x,y)));
+            => RenderMaze(grid, ImmutableList.Create<(int x, int y)>((x, y)));
                 
         // Each room in the maze is represented by two characters (South and East)
         // "_|", "__", "_ ", " |", "  "
-        public static void RenderMaze(Maze grid, ImmutableList<Tuple<int,int>> highlightList)
+        public static void RenderMaze(Maze grid, ImmutableList<(int x, int y)> highlightList)
         {
-            var highlight = highlightList == null? null : highlightList.ToImmutableHashSet();
+            var highlight = highlightList?.ToImmutableHashSet();
             Console.SetCursorPosition(0,0);
             Console.Write(" ");
             for(int x = 0; x < grid.width * 2 - 1; x++)
@@ -27,10 +27,18 @@ namespace MazeProgram
 
             for(int y = 0; y < grid.height; y++)
             {
-                Console.Write(y != grid.starty? "|" : " ");
+                if (y != grid.starty)
+                {
+                    Write("|");
+                }
+                else
+                {
+                    Write(" ", ConsoleColor.Red);
+                }
+
                 for(int x = 0; x < grid.width; x++)
                 {
-                    bool highlighted = (highlight != null && highlight.Contains(new Tuple<int,int>(x,y)));
+                    bool highlighted = highlight?.Contains((x, y)) ?? false;
 
                     if (grid.WallExists(y, x, Direction.South))
                     {
@@ -43,11 +51,11 @@ namespace MazeProgram
 
                     if (x == grid.finishx && y == grid.finishy)
                     {
-                        Write(" ", false);
+                        Write(" ", ConsoleColor.Red);
                     }
                     else if (grid.WallExists(y, x, Direction.East))
                     {
-                        Write("|", false);
+                        Write("|");
                     }
                     else if (grid.WallExists(y, x, Direction.South))
                     {
@@ -62,13 +70,11 @@ namespace MazeProgram
             }
         }
 
-        private static void Write(string txt, bool highlighted)
+        private static void Write(string txt, bool highlighted = false)
         {
             if (highlighted)
             {
-                Console.BackgroundColor = ConsoleColor.Green;
-                Console.Write(txt);
-                Console.ResetColor();
+                Write(txt, ConsoleColor.Green);
             }
             else
             {
@@ -76,5 +82,11 @@ namespace MazeProgram
             }
         }
 
+        private static void Write(string txt, ConsoleColor color)
+        {
+            Console.BackgroundColor = color;
+            Console.Write(txt);
+            Console.ResetColor();
+        }
     }
 }
