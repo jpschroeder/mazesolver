@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Collections.Immutable;
 
 namespace MazeProgram
@@ -6,6 +7,9 @@ namespace MazeProgram
     // Render a maze with a start,end, and highlighted path to the console
     public class MazeRenderer
     {
+        private const ConsoleColor _pathColor = ConsoleColor.DarkCyan;
+        private const ConsoleColor _startColor = ConsoleColor.DarkRed;
+
         public static void RenderMaze(Maze grid)
             => RenderMaze(grid, null);
 
@@ -18,75 +22,91 @@ namespace MazeProgram
         {
             var highlight = highlightList?.ToImmutableHashSet();
             Console.SetCursorPosition(0,0);
-            Console.Write(" ");
+            var console = new BufferredConsole();
+            console.Write(" ");
             for(int x = 0; x < grid.width * 2 - 1; x++)
             {
-                Console.Write("_");
+                console.Write("_");
             }
-            Console.Write("\n");
+            console.Write("\n");
 
             for(int y = 0; y < grid.height; y++)
             {
                 if (y != grid.starty)
                 {
-                    Write("|");
+                    console.Write("|");
                 }
                 else
                 {
-                    Write(" ", ConsoleColor.Red);
+                    console.Write(" ", _startColor);
                 }
 
                 for(int x = 0; x < grid.width; x++)
                 {
                     bool highlighted = highlight?.Contains((x, y)) ?? false;
+                    var color = highlighted? (ConsoleColor?)_pathColor : null;
 
                     if (grid.WallExists(y, x, Direction.South))
                     {
-                        Write("_", highlighted);
+                        console.Write("_", color);
                     }
                     else
                     {
-                        Write(" ", highlighted);
+                        console.Write(" ", color);
                     }
 
                     if (x == grid.finishx && y == grid.finishy)
                     {
-                        Write(" ", ConsoleColor.Red);
+                        console.Write(" ", _startColor);
                     }
                     else if (grid.WallExists(y, x, Direction.East))
                     {
-                        Write("|");
+                        console.Write("|");
                     }
                     else if (grid.WallExists(y, x, Direction.South))
                     {
-                        Write("_", highlighted);
+                        console.Write("_", color);
                     }
                     else
                     {
-                        Write(" ", highlighted);
+                        console.Write(" ", color);
                     }
                 }
-                Console.Write("\n");
+                console.Write("\n");
             }
+            console.Flush();
         }
 
-        private static void Write(string txt, bool highlighted = false)
+        private class BufferredConsole
         {
-            if (highlighted)
-            {
-                Write(txt, ConsoleColor.Green);
-            }
-            else
-            {
-                Console.Write(txt);
-            }
-        }
+            private ConsoleColor? _color;
+            private StringBuilder _buffer = new StringBuilder();
 
-        private static void Write(string txt, ConsoleColor color)
-        {
-            Console.BackgroundColor = color;
-            Console.Write(txt);
-            Console.ResetColor();
+            public void Flush()
+            {
+                if (_color.HasValue)
+                {
+                    Console.BackgroundColor = _color.Value;
+                    Console.Write(_buffer);
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.Write(_buffer);
+                }
+                _buffer.Clear();
+            }
+
+            public void Write(string str, ConsoleColor? color = null)
+            {
+                if (color != _color)
+                {
+                    Flush();
+                    _color = color;
+                    _buffer.Clear();
+                }
+                _buffer.Append(str);
+            }
         }
     }
 }

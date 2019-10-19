@@ -7,7 +7,7 @@ namespace MazeProgram
     {
         public static void Main(string[] args)
         {
-            int dimen = 22;
+            int dimen = 25;
             Console.Clear();
             Console.CursorVisible = false;
             //while(true)
