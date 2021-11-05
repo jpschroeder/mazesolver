@@ -315,6 +315,9 @@ def parse_args():
     else:
         frame_size = parse_size_arg(args.frame_size)
 
+    if args.size == "p" or args.frame_size == "p":
+        args.raw = True
+
     if frame_size.x < maze_size.x or frame_size.y < maze_size.y:
         print("Frame size cannot be less than maze size")
         exit()
