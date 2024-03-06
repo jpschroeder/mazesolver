@@ -1,25 +1,31 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
 import os
 import stat
-from dataclasses import dataclass
-from random import randrange, shuffle
-from math import floor
-from time import sleep
 from argparse import ArgumentParser
+from dataclasses import dataclass
+from math import floor
+from random import randrange, shuffle
+from time import sleep
 
 # MAZE
+
 
 @dataclass(frozen=True)
 class Point:
     x: int
     y: int
 
-    def add(self, other):
+    def add(self, other: Point) -> Point:
         return Point(self.x + other.x, self.y + other.y)
+
 
 @dataclass(frozen=True)
 class Direction:
     bitval: int
     offset: Point
+
 
 NORTH = Direction(1, Point(0, -1))
 SOUTH = Direction(2, Point(0, 1))
@@ -30,21 +36,22 @@ DIRECTIONS = [NORTH, SOUTH, EAST, WEST]
 
 OPPOSITE = {NORTH: SOUTH, SOUTH: NORTH, EAST: WEST, WEST: EAST}
 
+
 class Maze:
     def __init__(self, max, offset):
         self.max = max
         self.offset = offset
         self.start = Point(0, randrange(max.y))
         self.end = Point(max.x - 1, randrange(max.y))
-        self.grid = [[0] * max.x for i in range(max.y)]
+        self.grid = [[0] * max.x for _ in range(max.y)]
 
-    def has_doors(self, point):
+    def has_doors(self, point) -> bool:
         return self.grid[point.y][point.x] != 0
 
-    def create_door(self, point, direction):
+    def create_door(self, point, direction) -> None:
         self.grid[point.y][point.x] = self.grid[point.y][point.x] | direction.bitval
 
-    def is_valid(self, point):
+    def is_valid(self, point) -> bool:
         return (
             point.x >= 0
             and point.x < self.max.x
@@ -52,16 +59,17 @@ class Maze:
             and point.y < self.max.y
         )
 
-    def door_exists(self, point, direction):
+    def door_exists(self, point, direction) -> bool:
         return (self.grid[point.y][point.x] & direction.bitval) != 0
 
-    def wall_exists(self, point, direction):
+    def wall_exists(self, point, direction) -> bool:
         return (self.grid[point.y][point.x] & direction.bitval) == 0
 
 
 # GENERATOR
 
-def generate_maze(maze):
+
+def generate_maze(maze: Maze) -> Maze:
     # carve passages starting at a random point
     path = [Point(randrange(maze.max.x), randrange(maze.max.y))]
 
@@ -71,7 +79,7 @@ def generate_maze(maze):
     while len(path) > 0:
         current = path[-1]
         (dir, next) = next_available_passage(maze, current)
-        if dir is None:
+        if dir is None or next is None:
             path.pop()
             continue
 
@@ -84,7 +92,10 @@ def generate_maze(maze):
 
     return maze
 
-def next_available_passage(maze, current):
+
+def next_available_passage(
+    maze: Maze, current: Point
+) -> tuple[Direction | None, Point | None]:
     shuffle(DIRECTIONS)
     for dir in DIRECTIONS:
         next = current.add(dir.offset)
@@ -98,7 +109,8 @@ def next_available_passage(maze, current):
 
 # SOLVER
 
-def solve_maze(maze):
+
+def solve_maze(maze: Maze) -> list[Point] | None:
     path = [maze.start]
     visited = [maze.start]
 
@@ -110,7 +122,7 @@ def solve_maze(maze):
             return path
 
         (dir, next) = next_passage(maze, current, visited)
-        if dir is None:
+        if dir is None or next is None:
             path.pop()
             print_animate(set_color(VISITEDCOLOR, render_point(maze, current)))
         else:
@@ -120,7 +132,10 @@ def solve_maze(maze):
 
     return None
 
-def next_passage(maze, current, visited):
+
+def next_passage(
+    maze: Maze, current: Point, visited: list[Point]
+) -> tuple[Direction | None, Point | None]:
     shuffle(DIRECTIONS)
     for dir in DIRECTIONS:
         if not maze.door_exists(current, dir):
@@ -142,24 +157,29 @@ STARTCOLOR = "\033[41m"  # red
 ENDCOLOR = "\033[0m"
 CLEAR_SCREEN = "\033[2J"
 
-def set_cursor(y, x=0):
+
+def set_cursor(y, x=0) -> str:
     return f"\033[{y};{x}H"
 
-def set_color(color, str):
-    if config.raw:
-        return str
 
-    return color + str + ENDCOLOR
+def set_color(color, inp) -> str:
+    if config.raw:
+        return inp
+
+    return color + inp + ENDCOLOR
+
 
 XSEP = " " * 3
 
-def join_cols(string_arr):
+
+def join_cols(string_arr: list[str]) -> str:
     return XSEP.join(string_arr) + "\n"
 
-def render_maze_cols(mazes):
-    strvalue = []
 
-    headers = []
+def render_maze_cols(mazes: list[Maze]) -> str:
+    strvalue: list[str] = []
+
+    headers: list[str] = []
     for maze in mazes:
         headers.append(render_header(maze))
 
@@ -174,7 +194,8 @@ def render_maze_cols(mazes):
 
     return "".join(strvalue)
 
-def render_maze(maze):
+
+def render_maze(maze: Maze) -> str:
     strvalue = []
     strvalue.append(render_header(maze))
     strvalue.append("\n")
@@ -183,7 +204,8 @@ def render_maze(maze):
         strvalue.append("\n")
     return "".join(strvalue)
 
-def render_row(maze, y):
+
+def render_row(maze: Maze, y: int) -> str:
     strvalue = []
     if y == maze.start.y:
         strvalue.append(set_color(STARTCOLOR, " "))
@@ -195,10 +217,12 @@ def render_row(maze, y):
         strvalue.extend(cell_value(maze, point))
     return "".join(strvalue)
 
-def render_header(maze):
+
+def render_header(maze: Maze) -> str:
     return " " + "_" * maze.max.x * 2
 
-def render_point(maze, point):
+
+def render_point(maze: Maze, point: Point) -> str:
     strvalue = []
     strvalue.append(
         set_cursor(maze.offset.y + point.y + 2, maze.offset.x + (point.x * 2) + 2)
@@ -206,7 +230,8 @@ def render_point(maze, point):
     strvalue.extend(cell_value(maze, point))
     return "".join(strvalue)
 
-def cell_value(maze, point):
+
+def cell_value(maze: Maze, point: Point) -> list[str]:
     strvalue = []
 
     if maze.wall_exists(point, SOUTH):
@@ -225,16 +250,19 @@ def cell_value(maze, point):
 
     return strvalue
 
-def animate_delay():
+
+def animate_delay() -> None:
     if config.delay > 0:
         sleep(config.delay)
 
-def print_animate(str, **kwargs):
+
+def print_animate(inp, **kwargs) -> None:
     if not config.raw:
-        print(str, **kwargs)
+        print(inp, **kwargs)
 
 
 # MAIN
+
 
 @dataclass(frozen=True)
 class Config:
@@ -243,12 +271,14 @@ class Config:
     delay: int
     raw: bool
 
-def characters_to_cells(columns, lines):
+
+def characters_to_cells(columns: int, lines: int) -> Point:
     width = floor(columns / 2) - 1
     height = lines - 3
     return Point(width, height)
 
-def parse_size_arg(size):
+
+def parse_size_arg(size) -> Point:
     if size == "p":
         page_size = Point(37, 59)
         return page_size
@@ -269,11 +299,13 @@ def parse_size_arg(size):
 
     return Point(width, height)
 
-def is_stdout_redirected():
+
+def is_stdout_redirected() -> bool:
     stdout_fd = 1
     return not stat.S_ISCHR(os.stat(stdout_fd).st_mode)
 
-def parse_args():
+
+def parse_args() -> Config:
     is_redirected = is_stdout_redirected()
     parser = ArgumentParser()
     parser.add_argument(
@@ -329,7 +361,8 @@ def parse_args():
         raw=args.raw,
     )
 
-def maze():
+
+def maze() -> None:
     global config
     config = parse_args()
 
@@ -339,9 +372,9 @@ def maze():
     rows = int((config.frame_size.y + 2) / (config.maze_size.y + 2))
     cols = int((config.frame_size.x + 2) / (config.maze_size.x + 2))
 
-    mazerows = []
+    mazerows: list[list[Maze]] = []
     for row in range(rows):
-        mazecols = []
+        mazecols: list[Maze] = []
         for col in range(cols):
             offset = Point(
                 (config.maze_size.x * 2 + len(XSEP) + 1) * col,
@@ -368,6 +401,7 @@ def maze():
             print(render_maze_cols(mazes))
 
     print_animate(set_cursor((config.maze_size.y + 2) * rows, 0))
+
 
 if __name__ == "__main__":
     maze()
